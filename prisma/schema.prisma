@@ -17,6 +17,7 @@ model Project {
   name          String
   repoFullName  String   @unique @map("repo_full_name")
   triggerConfig Json     @default("{}") @map("trigger_config")
+  githubHookId  Int?     @map("github_hook_id")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 

@@ -27,4 +27,5 @@ export interface TriggerConfig {
   onManual?: boolean;
   notifyDev?: boolean;
   notifyUsers?: boolean;
+  requireApprovalForUsers?: boolean; // Si true, l'email USER attend une validation admin
 }

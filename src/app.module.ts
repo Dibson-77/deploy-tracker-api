@@ -8,6 +8,7 @@ import { ProjectModule } from './modules/project/project.module';
 import { TeamModule } from './modules/team/team.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
 import { HistoryModule } from './modules/history/history.module';
+import { ApprovalModule } from './modules/approval/approval.module';
 
 @Global()
 @Module({
@@ -36,6 +37,7 @@ import { HistoryModule } from './modules/history/history.module';
     TeamModule,
     WebhookModule,
     HistoryModule,
+    ApprovalModule,
   ],
   providers: [PrismaService],
   exports: [PrismaService],

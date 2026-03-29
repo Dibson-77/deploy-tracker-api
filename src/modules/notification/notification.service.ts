@@ -29,18 +29,70 @@ export class NotificationService {
       return;
     }
 
-    const content = this.contentBuilder.build(event, rdRawContent);
+    const content = await this.contentBuilder.build(event, rdRawContent);
     const allSentTo: string[] = [];
 
+    // Notifications DEV — envoi immédiat
     if (config.notifyDev) {
       await this.notifyTeams(project, 'DEV', content, allSentTo);
     }
 
+    // Notifications USER — envoi immédiat ou en attente d'approbation
     if (config.notifyUsers) {
-      await this.notifyTeams(project, 'USER', content, allSentTo);
+      if (config.requireApprovalForUsers) {
+        await this.createPendingApproval(project, event, content);
+      } else {
+        await this.notifyTeams(project, 'USER', content, allSentTo);
+      }
     }
 
     await this.logNotification(project.id, event, content, allSentTo, 'sent');
+  }
+
+  // Appel depuis ApprovalService après validation admin
+  async sendPendingNotification(logId: string): Promise<void> {
+    const log = await this.prisma.notificationLog.findUnique({
+      where: { id: logId },
+      include: { project: { include: { teams: { include: { members: true } } } } },
+    });
+
+    if (!log || log.status !== 'pending_approval') return;
+
+    const content = log.content as unknown as NotificationContent;
+    const emails = log.project.teams
+      .filter((t) => t.type === 'USER')
+      .flatMap((t) => t.members.map((m) => m.email));
+
+    if (emails.length === 0) return;
+
+    const resolved = this.templateResolver.resolveForUser(content);
+    await this.emailChannel.send(emails, resolved.subject, resolved.html);
+
+    await this.prisma.notificationLog.update({
+      where: { id: logId },
+      data: { status: 'sent', sentTo: emails },
+    });
+
+    this.logger.log(`Notification USER envoyée après approbation (log: ${logId})`);
+  }
+
+  private async createPendingApproval(
+    project: any,
+    event: ClassifiedEvent,
+    content: NotificationContent,
+  ): Promise<void> {
+    await this.prisma.notificationLog.create({
+      data: {
+        projectId: project.id,
+        eventType: event.type,
+        triggerBy: event.author,
+        progress: content.progress,
+        sentTo: [],
+        content: content as any,
+        status: 'pending_approval',
+      },
+    });
+    this.logger.log(`Notification USER mise en attente d'approbation pour ${project.name}`);
   }
 
   private shouldNotify(event: ClassifiedEvent, config: TriggerConfig): boolean {

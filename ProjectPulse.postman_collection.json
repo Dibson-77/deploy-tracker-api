@@ -1,0 +1,393 @@
+{
+  "info": {
+    "name": "ProjectPulse — Deploy Tracker API",
+    "_postman_id": "deploy-tracker-collection",
+    "description": "Collection complète pour tester le micro-service ProjectPulse",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "projectId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "teamId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "memberId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "notificationLogId",
+      "value": "",
+      "type": "string",
+      "description": "ID d'un NotificationLog en statut pending_approval (récupéré via GET /notifications/pending)"
+    }
+  ],
+  "item": [
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "GET — Liste tous les projets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/projects",
+              "host": ["{{baseUrl}}"],
+              "path": ["projects"]
+            }
+          }
+        },
+        {
+          "name": "GET — Détail d'un projet",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/projects/{{projectId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["projects", "{{projectId}}"]
+            }
+          }
+        },
+        {
+          "name": "POST — Créer un projet (+ auto webhook GitHub)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('projectId', res.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mon API Test\",\n  \"repoFullName\": \"ton-org/mon-repo\",\n  \"triggerConfig\": {\n    \"onPushBranches\": [\"main\", \"staging\"],\n    \"onPullRequestMerged\": true,\n    \"onRelease\": true,\n    \"onManual\": true,\n    \"notifyDev\": true,\n    \"notifyUsers\": false\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/projects",
+              "host": ["{{baseUrl}}"],
+              "path": ["projects"]
+            },
+            "description": "Crée le projet ET enregistre automatiquement le webhook sur GitHub si GITHUB_TOKEN est configuré."
+          }
+        },
+        {
+          "name": "PATCH — Modifier triggerConfig",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"triggerConfig\": {\n    \"onPushBranches\": [\"main\"],\n    \"onPullRequestMerged\": true,\n    \"onRelease\": true,\n    \"onManual\": true,\n    \"notifyDev\": true,\n    \"notifyUsers\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/projects/{{projectId}}/trigger-config",
+              "host": ["{{baseUrl}}"],
+              "path": ["projects", "{{projectId}}", "trigger-config"]
+            },
+            "description": "Met à jour la config de déclenchement. Mettre notifyUsers à true pour activer les notifications aux acteurs."
+          }
+        },
+        {
+          "name": "DELETE — Supprimer un projet (+ supprime webhook GitHub)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/projects/{{projectId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["projects", "{{projectId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Teams & Members",
+      "item": [
+        {
+          "name": "GET — Équipes d'un projet",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/projects/{{projectId}}/teams",
+              "host": ["{{baseUrl}}"],
+              "path": ["projects", "{{projectId}}", "teams"]
+            }
+          }
+        },
+        {
+          "name": "POST — Créer équipe DEV",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('teamId', res.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Equipe Dev\",\n  \"type\": \"DEV\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/projects/{{projectId}}/teams",
+              "host": ["{{baseUrl}}"],
+              "path": ["projects", "{{projectId}}", "teams"]
+            },
+            "description": "Type DEV = reçoit l'email technique (commits, fichiers, checkpoint)"
+          }
+        },
+        {
+          "name": "POST — Créer équipe USER",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Clients\",\n  \"type\": \"USER\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/projects/{{projectId}}/teams",
+              "host": ["{{baseUrl}}"],
+              "path": ["projects", "{{projectId}}", "teams"]
+            },
+            "description": "Type USER = reçoit l'email vulgarisé (message, changements visibles, progression)"
+          }
+        },
+        {
+          "name": "POST — Ajouter un membre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.collectionVariables.set('memberId', res.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Junior Dev\",\n  \"email\": \"junior@dctd-cie.com\",\n  \"role\": \"developer\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/teams/{{teamId}}/members",
+              "host": ["{{baseUrl}}"],
+              "path": ["teams", "{{teamId}}", "members"]
+            }
+          }
+        },
+        {
+          "name": "DELETE — Supprimer un membre",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/teams/{{teamId}}/members/{{memberId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["teams", "{{teamId}}", "members", "{{memberId}}"]
+            }
+          }
+        },
+        {
+          "name": "DELETE — Supprimer une équipe",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/teams/{{teamId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["teams", "{{teamId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhook & Trigger",
+      "item": [
+        {
+          "name": "POST — Webhook GitHub (simuler un push)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-github-event", "value": "push" },
+              { "key": "x-hub-signature-256", "value": "sha256=test" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ref\": \"refs/heads/main\",\n  \"repository\": {\n    \"full_name\": \"ton-org/mon-repo\",\n    \"name\": \"mon-repo\"\n  },\n  \"pusher\": {\n    \"name\": \"juniordev\",\n    \"email\": \"junior@dctd-cie.com\"\n  },\n  \"commits\": [\n    {\n      \"id\": \"abc123def456\",\n      \"message\": \"feat: ajout module de facturation\",\n      \"author\": { \"name\": \"Junior\", \"email\": \"junior@dctd-cie.com\" },\n      \"added\": [\"src/billing/billing.service.ts\"],\n      \"modified\": [\"src/app.module.ts\"],\n      \"removed\": []\n    }\n  ],\n  \"head_commit\": {\n    \"id\": \"abc123def456\",\n    \"message\": \"feat: ajout module de facturation\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook/github",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhook", "github"]
+            },
+            "description": "Simule un appel GitHub. En production c'est GitHub qui appelle cet endpoint automatiquement."
+          }
+        },
+        {
+          "name": "POST — Trigger manuel (notification DEV + USER)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"La nouvelle version du module de facturation est en ligne !\",\n  \"userChanges\": [\n    \"Vous pouvez maintenant exporter vos factures en PDF\",\n    \"Nouveau tableau de bord des paiements disponible\",\n    \"Les relances sont maintenant automatiques\"\n  ],\n  \"progress\": \"75%\",\n  \"nextStep\": \"Module de gestion des abonnements\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook/trigger/{{projectId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhook", "trigger", "{{projectId}}"]
+            },
+            "description": "Déclenchement manuel depuis n'importe quelle autre API. Utilisé pour notifier les acteurs non-techniques avec un message rédigé."
+          }
+        }
+      ]
+    },
+    {
+      "name": "History",
+      "item": [
+        {
+          "name": "GET — Historique toutes notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["history"]
+            }
+          }
+        },
+        {
+          "name": "GET — Historique d'un projet",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/history?projectId={{projectId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["history"],
+              "query": [
+                { "key": "projectId", "value": "{{projectId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET — Détail d'une notification",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/history/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["history", ":id"],
+              "variable": [
+                { "key": "id", "value": "" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Approvals (Admin)",
+      "description": "Endpoints pour approuver ou rejeter les notifications USER en attente. Utilisé quand requireApprovalForUsers = true dans le triggerConfig.",
+      "item": [
+        {
+          "name": "GET — Notifications en attente d'approbation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "pending"]
+            },
+            "description": "Liste toutes les notifications USER en statut pending_approval. Retourne l'ID à utiliser pour approuver ou rejeter."
+          }
+        },
+        {
+          "name": "POST — Approuver et envoyer une notification",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/:id/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", ":id", "approve"],
+              "variable": [
+                { "key": "id", "value": "{{notificationLogId}}", "description": "ID du NotificationLog en pending_approval" }
+              ]
+            },
+            "description": "Approuve la notification et envoie immédiatement l'email aux équipes USER du projet."
+          }
+        },
+        {
+          "name": "POST — Rejeter une notification",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/:id/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", ":id", "reject"],
+              "variable": [
+                { "key": "id", "value": "{{notificationLogId}}", "description": "ID du NotificationLog en pending_approval" }
+              ]
+            },
+            "description": "Rejette la notification. Le statut passe à 'rejected' et aucun email n'est envoyé."
+          }
+        }
+      ]
+    }
+  ]
+}
