@@ -1,0 +1,73 @@
+// prisma/schema.prisma
+// ─────────────────────
+// npx prisma migrate dev --name auth-2fa
+// npx prisma db seed
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Project {
+  id            String   @id @default(uuid())
+  name          String
+  repoFullName  String   @unique @map("repo_full_name")
+  triggerConfig Json     @default("{}") @map("trigger_config")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  teams            Team[]
+  notificationLogs NotificationLog[]
+
+  @@map("projects")
+}
+
+enum TeamType {
+  DEV
+  USER
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  name      String
+  type      TeamType
+  projectId String   @map("project_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  members Member[]
+
+  @@map("teams")
+}
+
+model Member {
+  id     String @id @default(uuid())
+  name   String
+  email  String
+  role   String @default("member")
+  teamId String @map("team_id")
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@map("members")
+}
+
+model NotificationLog {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  eventType String   @map("event_type")
+  triggerBy String   @map("trigger_by")
+  progress  String?
+  sentTo    Json     @map("sent_to")
+  content   Json?
+  status    String   @default("sent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("notification_logs")
+}

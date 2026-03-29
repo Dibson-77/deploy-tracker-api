@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333; padding: 20px; }
+    .header { background: #16213e; color: #fff; padding: 16px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+    .content { background: #f8f9fa; padding: 20px; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 8px 8px; }
+    .change-item { background: #fff; border-left: 3px solid #198754; padding: 8px 12px; margin: 6px 0; border-radius: 0 4px 4px 0; }
+    .progress-bar { background: #e9ecef; border-radius: 12px; overflow: hidden; height: 24px; margin: 12px 0; }
+    .progress-fill { background: linear-gradient(90deg, #198754, #20c997); height: 100%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: bold; }
+    .next-step { background: #cff4fc; border: 1px solid #0dcaf0; padding: 10px; border-radius: 6px; margin-top: 12px; }
+    .footer { text-align: center; color: #6c757d; font-size: 12px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2 style="margin:0;">{{project}} — Nouvelle mise à jour</h2>
+  </div>
+  <div class="content">
+    {{#if userMessage}}
+    <p>{{userMessage}}</p>
+    {{/if}}
+
+    {{#if userChanges}}
+    <p><strong>Ce qui change pour vous :</strong></p>
+    {{#each userChanges}}
+    <div class="change-item">{{this}}</div>
+    {{/each}}
+    {{/if}}
+
+    {{#if progress}}
+    <p><strong>Progression du projet :</strong></p>
+    <div class="progress-bar">
+      <div class="progress-fill" style="width: {{progress}}">{{progress}}</div>
+    </div>
+    {{/if}}
+
+    {{#if nextStep}}
+    <div class="next-step">
+      <strong>Prochaine étape :</strong> {{nextStep}}
+    </div>
+    {{/if}}
+  </div>
+  <div class="footer">
+    <p>Notification automatique — ProjectPulse</p>
+  </div>
+</body>
+</html>

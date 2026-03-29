@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333; padding: 20px; }
+    .header { background: #1a1a2e; color: #fff; padding: 16px 20px; border-radius: 8px 8px 0 0; }
+    .content { background: #f8f9fa; padding: 20px; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 8px 8px; }
+    .commit { background: #fff; border-left: 3px solid #0d6efd; padding: 8px 12px; margin: 6px 0; border-radius: 0 4px 4px 0; }
+    .commit code { font-size: 12px; color: #6c757d; }
+    .meta { color: #6c757d; font-size: 13px; margin-top: 16px; }
+    .badge { display: inline-block; background: #0d6efd; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+    .checkpoint { background: #fff3cd; border: 1px solid #ffc107; padding: 10px; border-radius: 6px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2 style="margin:0;">[{{project}}] {{eventType}} — {{branch}} par {{author}}</h2>
+  </div>
+  <div class="content">
+    {{#if commits}}
+    <p><strong>Commits ({{commitCount}}) :</strong></p>
+    {{#each commits}}
+    <div class="commit">
+      <strong>{{this.message}}</strong><br>
+      <code>{{this.id}} — {{this.author}}</code>
+    </div>
+    {{/each}}
+    {{/if}}
+
+    {{#if prTitle}}
+    <p><strong>Pull Request #{{prNumber}} :</strong> {{prTitle}}</p>
+    {{#if prBody}}<p>{{prBody}}</p>{{/if}}
+    {{/if}}
+
+    {{#if releaseTag}}
+    <p><strong>Release :</strong> {{releaseTag}} {{#if releaseName}}— {{releaseName}}{{/if}}</p>
+    {{#if releaseBody}}<p>{{releaseBody}}</p>{{/if}}
+    {{/if}}
+
+    {{#if filesChanged}}
+    <p class="meta">Fichiers modifiés : <span class="badge">{{filesChanged}}</span></p>
+    {{/if}}
+
+    {{#if checkpoint}}
+    <div class="checkpoint">
+      <strong>Checkpoint :</strong> {{checkpoint}}
+    </div>
+    {{/if}}
+
+    {{#if progress}}
+    <p class="meta">Progression : <strong>{{progress}}</strong></p>
+    {{/if}}
+
+    <p class="meta">Branche : {{branch}} {{#if commitSha}}— {{commitSha}}{{/if}}</p>
+  </div>
+</body>
+</html>
